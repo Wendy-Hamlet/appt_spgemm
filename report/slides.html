@@ -1,0 +1,282 @@
+<title>Structure-Aware SpGEMM — APPT 2026 Student GPU Challenge</title>
+<style>
+  :root{
+    --ink:#141821; --muted:#5b6472; --faint:#9099a8;
+    --bg:#ffffff; --panel:#f4f6fa; --line:#dfe4ec;
+    --accent:#2f6df6; --accent2:#0e3a8c; --amber:#e2711d; --grid:#e7ebf2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:"Georgia","Times New Roman",serif; color:var(--ink); background:#0b0d12; overflow:hidden}
+  .deck{position:fixed; inset:0}
+  .slide{position:absolute; inset:0; display:none; padding:6vh 7vw; background:var(--bg);
+    flex-direction:column; justify-content:center}
+  .slide.on{display:flex; animation:fade .28s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .kicker{font-family:"Helvetica Neue",Arial,sans-serif; font-size:1.4vw; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:1.4vh}
+  h1{font-size:4.4vw; line-height:1.08; letter-spacing:-.5px}
+  h2{font-size:2.9vw; line-height:1.12; letter-spacing:-.3px; margin-bottom:2.4vh}
+  .sub{font-size:1.6vw; color:var(--muted); margin-top:2vh; line-height:1.5}
+  .sub b{color:var(--accent2)}
+  .big{font-size:2.1vw}
+  code{font-family:"SF Mono","Consolas",monospace; font-size:.86em; background:var(--panel);
+    padding:.06em .36em; border-radius:5px; color:var(--accent2)}
+  .center{align-items:center; text-align:center}
+  .center h1{font-size:5vw}
+  .hero-num{font-family:"Helvetica Neue",Arial,sans-serif; font-weight:800; color:var(--accent2)}
+  .foot{position:absolute; bottom:3vh; left:7vw; right:7vw; display:flex; justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif; font-size:1vw; color:var(--faint); letter-spacing:.04em}
+  .pill{display:inline-block; font-family:"Helvetica Neue",Arial,sans-serif; font-size:1.15vw;
+    background:#eaf0ff; color:var(--accent2); border:1px solid #cfdcff; border-radius:999px;
+    padding:.5vh 1.1vw; margin:.5vh .4vw; letter-spacing:.02em}
+  .cap{font-family:"Helvetica Neue",Arial,sans-serif; font-size:1.3vw; color:var(--muted); text-align:center; margin-top:1.4vh}
+  .cap b{color:var(--accent2)}
+  .lab{font-family:"Helvetica Neue",Arial,sans-serif; font-size:1.15vw; color:#2a3240; text-align:center; margin-top:.8vh}
+  .lab small{display:block; font-size:.86em; color:var(--faint); margin-top:.2vh}
+  .progress{position:fixed; top:0; left:0; height:5px; background:var(--accent); z-index:9; transition:width .28s}
+  /* generic flex row of visuals */
+  .viz{display:flex; align-items:center; justify-content:center; gap:2.2vw; flex-wrap:wrap; margin-top:1vh}
+  .mx{display:inline-block}
+  .op{font-family:"Helvetica Neue",Arial,sans-serif; font-size:3vw; color:var(--faint); font-weight:300}
+  /* thumbnails grid */
+  .thumbs{display:grid; grid-template-columns:repeat(4,1fr); gap:2.4vw; margin-top:1vh}
+  .thumb{text-align:center}
+  /* bar charts */
+  .chart{width:100%; margin-top:1vh}
+  .brow{display:grid; grid-template-columns:16vw 1fr; align-items:center; gap:1.2vw; margin:1.5vh 0}
+  .rlab{font-family:"Helvetica Neue",Arial,sans-serif; font-size:1.5vw; color:#2a3240; text-align:right}
+  .track{position:relative; height:4.4vh; background:var(--panel); border-radius:8px; overflow:hidden}
+  .fill{height:100%; border-radius:8px; display:flex; align-items:center; justify-content:flex-end;
+    padding-right:1vw; color:#fff; font-family:"Helvetica Neue",Arial,sans-serif; font-weight:700; font-size:1.5vw}
+  .fill.base{background:#9aa4b2}
+  .fill.ok{background:#7f9fd8}
+  .fill.hero{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .fill.oracle{background:repeating-linear-gradient(45deg,#c7d3e8,#c7d3e8 8px,#dae2f0 8px,#dae2f0 16px); color:#33405a}
+  /* feature importance */
+  .fbar{display:grid; grid-template-columns:9vw 1fr; align-items:center; gap:1.2vw; margin:1.3vh 0}
+  .fbar .rlab{font-size:1.4vw}
+  .ftrack{position:relative; height:3.6vh; background:var(--panel); border-radius:7px; overflow:hidden}
+  .ffill{height:100%; border-radius:7px; display:flex; align-items:center; justify-content:flex-end; padding-right:.8vw;
+    color:#fff; font-family:"Helvetica Neue",Arial,sans-serif; font-weight:700; font-size:1.3vw}
+  /* flow diagram boxes */
+  .flow{display:flex; align-items:center; justify-content:center; gap:1.6vw; margin-top:2vh; flex-wrap:wrap}
+  .node{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:2.2vh 1.8vw; text-align:center;
+    font-family:"Helvetica Neue",Arial,sans-serif}
+  .node .t{font-size:1.5vw; color:var(--accent2); font-weight:700}
+  .node .d{font-size:1.1vw; color:var(--muted); margin-top:.6vh; line-height:1.35}
+  .node.pick{border-color:var(--accent); box-shadow:0 0 0 3px #eaf0ff}
+  .arrow{font-size:2.4vw; color:var(--faint)}
+  .two-node{display:flex; flex-direction:column; gap:1.2vh}
+  .chip{font-family:"Helvetica Neue",Arial,sans-serif; font-size:1.3vw; font-weight:700; color:#fff;
+    border-radius:10px; padding:1.4vh 1.6vw; text-align:center}
+  .chip.blue{background:var(--accent)} .chip.amber{background:var(--amber)}
+  /* stacked routing bar */
+  .stack{display:flex; height:7vh; border-radius:12px; overflow:hidden; margin-top:2vh; border:1px solid var(--line)}
+  .seg{display:flex; align-items:center; justify-content:center; color:#fff;
+    font-family:"Helvetica Neue",Arial,sans-serif; font-weight:700; font-size:1.6vw}
+  .legend{display:flex; gap:2.4vw; justify-content:center; margin-top:1.6vh; font-family:"Helvetica Neue",Arial,sans-serif; font-size:1.4vw}
+  .legend span{display:inline-flex; align-items:center; gap:.6vw; color:#2a3240}
+  .sw{width:1.4vw; height:1.4vw; border-radius:4px; display:inline-block}
+</style>
+
+<div class="progress" id="prog"></div>
+<div class="deck" id="deck">
+
+  <!-- 1 TITLE -->
+  <section class="slide center on">
+    <div class="kicker">APPT 2026 · Student GPU Programming Challenge</div>
+    <h1>Structure-Aware SpGEMM on GPUs</h1>
+    <div class="sub big">A portable hash engine and a <b>zero-profiling dispatcher</b><br>
+      for <code>C = A·A</code> and <code>C = A·Aᵀ</code> on the SuiteSparse collection</div>
+    <div style="margin-top:3.4vh">
+      <span class="pill">100 real SuiteSparse matrices</span>
+      <span class="pill">single A100 80GB target</span>
+      <span class="pill">CUDA · sm_80</span>
+    </div>
+  </section>
+
+  <!-- 2 BACKGROUND -->
+  <section class="slide">
+    <div class="kicker">Background</div>
+    <h2>Two sparse products — cost is <em>irregularity</em>, not arithmetic</h2>
+    <div class="viz">
+      <div class="mx"><div id="p_a1"></div><div class="lab">A <small>sparse</small></div></div>
+      <div class="op">×</div>
+      <div class="mx"><div id="p_a2"></div><div class="lab">A</div></div>
+      <div class="op">=</div>
+      <div class="mx"><div id="p_c1"></div><div class="lab">C = A·A <small>self-product</small></div></div>
+      <div style="width:3vw"></div>
+      <div class="mx"><div id="p_c2"></div><div class="lab">C = A·Aᵀ <small>Gram · symmetric</small></div></div>
+    </div>
+    <div class="cap">Output size is <b>unknown in advance</b> · row lengths <b>vary wildly</b> · access is <b>data-dependent</b></div>
+    <div class="foot"><span>Structure-Aware SpGEMM</span><span>APPT 2026</span></div>
+  </section>
+
+  <!-- 3 DIFFICULTY -->
+  <section class="slide">
+    <div class="kicker">The hard part</div>
+    <h2>Real matrices are heterogeneous — no single kernel wins</h2>
+    <div class="thumbs">
+      <div class="thumb"><div id="t_band"></div><div class="lab">banded PDE</div></div>
+      <div class="thumb"><div id="t_power"></div><div class="lab">power-law graph</div></div>
+      <div class="thumb"><div id="t_stiff"></div><div class="lab">stiffness matrix</div></div>
+      <div class="thumb"><div id="t_circ"></div><div class="lab">circuit (unsymmetric)</div></div>
+    </div>
+    <div class="chart" style="margin-top:3vh; max-width:70vw; align-self:center">
+      <div class="fbar"><div class="rlab">bcsstk10</div><div class="ftrack"><div class="ffill" style="width:100%;background:var(--amber)">190× slower</div></div></div>
+      <div class="fbar"><div class="rlab">bcsstk23</div><div class="ftrack"><div class="ffill" style="width:55%;background:var(--amber)">104×</div></div></div>
+      <div class="fbar"><div class="rlab">bcsstk06</div><div class="ftrack"><div class="ffill" style="width:51%;background:var(--amber)">96×</div></div></div>
+    </div>
+    <div class="cap">Even the vendor library <b>cuSPARSE hits pathological paths</b> — up to <b>190× slower</b> than our simple engine</div>
+    <div class="foot"><span>Structure-Aware SpGEMM</span><span>APPT 2026</span></div>
+  </section>
+
+  <!-- 4 OUR ENGINE -->
+  <section class="slide">
+    <div class="kicker">Our optimization · Part 1</div>
+    <h2>A portable hash engine — one warp per row, sized per row</h2>
+    <div class="flow">
+      <div class="node"><div class="t">Output rows</div><div class="d">one warp each<br>estimate work = 1.33·flopsᵢ</div></div>
+      <div class="arrow">→</div>
+      <div class="two-node">
+        <div class="node pick"><div class="t">Shared-memory hash</div><div class="d">small rows · fast intra-warp atomics</div></div>
+        <div class="node"><div class="t">Global-memory arena</div><div class="d">large rows spill here · no overflow</div></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="t">Canonical CSR</div><div class="d">symbolic + numeric<br>CUB radix sort</div></div>
+    </div>
+    <div class="cap">One templated <code>A·B</code> engine for both tasks (<code>B=A</code> or <code>B=Aᵀ</code>) ·
+      <b>sm_80 only, runs on A100</b> · <b>byte-exact on all 258 tasks</b></div>
+    <div class="foot"><span>Structure-Aware SpGEMM</span><span>APPT 2026</span></div>
+  </section>
+
+  <!-- 5 DISPATCHER -->
+  <section class="slide">
+    <div class="kicker">Our optimization · Part 2 — the key idea</div>
+    <h2>A zero-profiling dispatcher</h2>
+    <div class="flow" style="margin-top:1vh">
+      <div class="node"><div class="t">Matrix (CSR)</div><div class="d">at load time</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="t">Cheap descriptors</div><div class="d">no timing · no trial runs</div></div>
+      <div class="arrow">→</div>
+      <div class="node pick"><div class="t">Fixed rule</div><div class="d">route this matrix</div></div>
+      <div class="arrow">→</div>
+      <div class="two-node">
+        <div class="chip blue">our engine</div>
+        <div class="chip amber">cuSPARSE</div>
+      </div>
+    </div>
+    <div class="chart" style="max-width:66vw; align-self:center; margin-top:2.4vh">
+      <div class="fbar"><div class="rlab">deg_cv</div><div class="ftrack"><div class="ffill" style="width:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))">0.81</div></div></div>
+      <div class="fbar"><div class="rlab">fill</div><div class="ftrack"><div class="ffill" style="width:15%;background:#7f9fd8">0.12</div></div></div>
+      <div class="fbar"><div class="rlab">nnz</div><div class="ftrack"><div class="ffill" style="width:9%;background:#9aa4b2">0.07</div></div></div>
+    </div>
+    <div class="cap">Decision feature importance — dominated by <b>row-length imbalance (deg_cv)</b>,
+      the very irregularity that makes SpGEMM hard</div>
+    <div class="foot"><span>Structure-Aware SpGEMM</span><span>APPT 2026</span></div>
+  </section>
+
+  <!-- 6 RESULTS -->
+  <section class="slide">
+    <div class="kicker">Effect · whole benchmark (258 tasks)</div>
+    <h2>Speedup over cuSPARSE</h2>
+    <div class="chart">
+      <div class="brow"><div class="rlab">cuSPARSE always</div>
+        <div class="track"><div class="fill base" style="width:29.3%">1.00×</div></div></div>
+      <div class="brow"><div class="rlab">Our engine always</div>
+        <div class="track"><div class="fill ok" style="width:41.0%">1.40×</div></div></div>
+      <div class="brow"><div class="rlab">Our dispatcher</div>
+        <div class="track"><div class="fill hero" style="width:77.1%">2.63×</div></div></div>
+      <div class="brow"><div class="rlab">Oracle (upper bound)</div>
+        <div class="track"><div class="fill oracle" style="width:100%">3.41×</div></div></div>
+    </div>
+    <div class="cap"><b>2.63× over cuSPARSE</b> — <b>88% of the oracle</b> gain · &lt;1% descriptor cost on small matrices ·
+      <b>0 / 258</b> correctness mismatches</div>
+    <div class="foot"><span>Structure-Aware SpGEMM</span><span>APPT 2026</span></div>
+  </section>
+
+  <!-- 7 ROBUSTNESS -->
+  <section class="slide">
+    <div class="kicker">Effect · robustness by construction</div>
+    <h2>The dispatcher routes each matrix to whatever solves it fastest</h2>
+    <div style="max-width:70vw; align-self:center; width:100%">
+      <div class="stack">
+        <div class="seg" style="width:81.8%;background:var(--accent)">picks our engine · 211</div>
+        <div class="seg" style="width:18.2%;background:var(--amber)">cuSPARSE · 47</div>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--accent)"></i> our engine wins here (~80% of the suite)</span>
+        <span><i class="sw" style="background:var(--amber)"></i> large / high-fill → send to cuSPARSE</span>
+      </div>
+    </div>
+    <div class="cap" style="margin-top:3vh">We are honest about the failure mode — and that is <b>exactly where the dispatcher sends work away.</b>
+      The system never depends on one kernel being universally best.</div>
+    <div class="foot"><span>Structure-Aware SpGEMM</span><span>APPT 2026</span></div>
+  </section>
+
+  <!-- 8 CONCLUSION -->
+  <section class="slide center">
+    <div class="kicker">Takeaway</div>
+    <h1>Real-world SpGEMM<br>is a <span class="hero-num">generality</span> problem</h1>
+    <div class="sub big" style="max-width:60vw">
+      A correct, portable hash engine + a <b>profiling-free structure-aware dispatcher</b>
+      — <b>2.63× over cuSPARSE</b>, driven by row-length imbalance.<br>
+      Route each matrix to whatever solves it fastest.
+    </div>
+    <div style="margin-top:3.4vh" class="sub">Thank you — questions welcome.</div>
+  </section>
+
+</div>
+
+<script>
+  // ---- sparse-matrix thumbnail renderer ----
+  function draw(id,n,pred,opt){
+    opt=opt||{};
+    var s=opt.w||12;                              // total SVG size in vw (square)
+    var fill=opt.fill||'#2f6df6';
+    var svg='<svg viewBox="0 0 '+(n)+' '+(n)+'" style="width:'+s+'vw;height:'+s+'vw;background:#fff;border:1px solid var(--line);border-radius:8px">';
+    svg+='<rect x="0" y="0" width="'+n+'" height="'+n+'" fill="#fbfcfe"/>';
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++){
+      if(pred(r,c,n)) svg+='<rect x="'+c+'" y="'+r+'" width="0.86" height="0.86" rx="0.18" fill="'+fill+'" opacity="'+(opt.op||0.92)+'"/>';
+    }
+    svg+='</svg>';
+    var el=document.getElementById(id); if(el) el.innerHTML=svg;
+  }
+  function rnd(seed){var x=Math.sin(seed*99991)*10000;return x-Math.floor(x);}
+  // patterns
+  var band =function(r,c,n){return Math.abs(r-c)<=1;};
+  var band2=function(r,c,n){return Math.abs(r-c)<=2;};                 // A·A widens band
+  var gram =function(r,c,n){return Math.abs(r-c)<=2||((r+c)%7===0);};   // symmetric-ish
+  var power=function(r,c,n){return r===0||c===0||r===1||c===1||r===c;};
+  var stiff=function(r,c,n){var b=3;return (Math.floor(r/b)===Math.floor(c/b))||(r===c)||((Math.abs(r-c)===b));};
+  var circ =function(r,c,n){return r===c||rnd(r*31+c*7)<0.10||rnd(c*31+r*7)<0.05;};
+  window.addEventListener('DOMContentLoaded',function(){
+    draw('p_a1',10,band,{w:10}); draw('p_a2',10,band,{w:10});
+    draw('p_c1',10,band2,{w:10}); draw('p_c2',10,gram,{w:10});
+    draw('t_band',12,band,{fill:'#2f6df6',w:11});
+    draw('t_power',12,power,{fill:'#7a3ff0',w:11});
+    draw('t_stiff',12,stiff,{fill:'#137a4b',w:11});
+    draw('t_circ',12,circ,{fill:'#e2711d',w:11});
+  });
+
+  // ---- deck navigation ----
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('on',k===i));
+    document.getElementById('prog').style.width=(i/(slides.length-1)*100)+'%';
+  }
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();show(i+1)}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();show(i-1)}
+    else if(e.key==='Home'){show(0)} else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key==='f'||e.key==='F'){document.documentElement.requestFullscreen?.()}
+  });
+  document.getElementById('deck').addEventListener('click',e=>{
+    if(e.target.closest('a'))return;
+    if(e.clientX < window.innerWidth*0.25) show(i-1); else show(i+1);
+  });
+  show(0);
+</script>
