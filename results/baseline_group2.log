@@ -1,0 +1,72 @@
+SKIP ATandT__pre2                       est_aa=4.18e+08 est_aat=5.43e+08 > cap
+OK   Bai__rw5151                        AA   C_nnz=      50387    0.398 ms
+OK   Bai__rw5151                        AAt  C_nnz=      64745    0.333 ms
+OK   Bomhof__circuit_2                  AA   C_nnz=    2160324    2.330 ms
+OK   Bomhof__circuit_2                  AAt  C_nnz=    3299058    2.231 ms
+OK   Cylshell__s1rmq4m1                 AA   C_nnz=     755453   19.007 ms
+OK   Cylshell__s1rmq4m1                 AAt  C_nnz=     755453   10.867 ms
+OK   DRIVCAV__cavity10                  AA   C_nnz=     333396    0.843 ms
+OK   DRIVCAV__cavity10                  AAt  C_nnz=     356209    2.248 ms
+OK   GHS_indef__ncvxbqp1                AA   C_nnz=    1099432    1.095 ms
+OK   GHS_indef__ncvxbqp1                AAt  C_nnz=    1099432    0.913 ms
+OK   Goodwin__Goodwin_127               AA   C_nnz=   26891956   22.022 ms
+OK   Goodwin__Goodwin_127               AAt  C_nnz=   26802959   23.578 ms
+OK   Gset__G57                          AA   C_nnz=      45000    0.342 ms
+OK   Gset__G57                          AAt  C_nnz=      45000    0.344 ms
+OK   HB__sherman3                       AA   C_nnz=      59909    0.352 ms
+OK   HB__sherman3                       AAt  C_nnz=      59909    0.343 ms
+OK   Hamrle__Hamrle2                    AA   C_nnz=      64330    0.941 ms
+OK   Hamrle__Hamrle2                    AAt  C_nnz=      60494    0.751 ms
+OK   LAW__amazon-2008                   AA   C_nnz=   25366745   32.646 ms
+OK   LAW__amazon-2008                   AAt  C_nnz=   48365714   44.978 ms
+OK   ML_Graph__worms20_10NN             AA   C_nnz=     755765    1.356 ms
+OK   ML_Graph__worms20_10NN             AAt  C_nnz=     755765    0.984 ms
+OK   Mallya__lhr10                      AA   C_nnz=    1249871    1.433 ms
+OK   Mallya__lhr10                      AAt  C_nnz=    1058820    1.762 ms
+SKIP Muite__Chebyshev4                  est_aa=2.77e+08 est_aat=4.28e+08 > cap
+OK   Oberwolfach__inlet                 AA   C_nnz=    1347981    2.782 ms
+OK   Oberwolfach__inlet                 AAt  C_nnz=    1089250    2.300 ms
+OK   Oberwolfach__t3dl_e                AA   C_nnz=      20360    0.208 ms
+OK   Oberwolfach__t3dl_e                AAt  C_nnz=      20360    0.334 ms
+SKIP PARSEC__Ga3As3H12                  est_aa=3.68e+09 est_aat=3.68e+09 > cap
+OK   QLi__crashbasis                    AA   C_nnz=    8243392    4.822 ms
+OK   QLi__crashbasis                    AAt  C_nnz=    8224288    6.593 ms
+OK   QLi__largebasis                    AA   C_nnz=   17040280   14.692 ms
+OK   QLi__largebasis                    AAt  C_nnz=   17040280   58.845 ms
+OK   QLi__majorbasis                    AA   C_nnz=    8243392    7.747 ms
+OK   QLi__majorbasis                    AAt  C_nnz=    8224288    7.867 ms
+SKIP Rajat__rajat18                     est_aa=8.81e+08 est_aat=8.87e+08 > cap
+SKIP Rajat__rajat25                     est_aa=9.11e+08 est_aat=9.11e+08 > cap
+SKIP Rajat__rajat29                     est_aa=3.85e+11 est_aat=3.95e+11 > cap
+OK   Raju__laminar_duct3D               AA   C_nnz=   18934077   18.631 ms
+OK   Raju__laminar_duct3D               AAt  C_nnz=   17579159   18.641 ms
+OK   Rommes__bips07_1693                AA   C_nnz=     124904   54.376 ms
+OK   Rommes__bips07_1693                AAt  C_nnz=     139889    2.090 ms
+OK   Rommes__bips98_606                 AA   C_nnz=      98760    6.574 ms
+OK   Rommes__bips98_606                 AAt  C_nnz=     107949   14.593 ms
+OK   SNAP__CollegeMsg                   AA   C_nnz=     407071   10.663 ms
+OK   SNAP__CollegeMsg                   AAt  C_nnz=     320778    7.184 ms
+SKIP SNAP__com-Youtube                  est_aa=2.95e+09 est_aat=2.95e+09 > cap
+SKIP SNAP__email-EuAll                  est_aa=5.06e+07 est_aat=3.55e+08 > cap
+OK   SNAP__p2p-Gnutella08               AA   C_nnz=      89625    2.115 ms
+OK   SNAP__p2p-Gnutella08               AAt  C_nnz=     219107   48.061 ms
+OK   SNAP__soc-sign-bitcoin-otc         AA   C_nnz=    1677771   34.254 ms
+OK   SNAP__soc-sign-bitcoin-otc         AAt  C_nnz=    1414978   40.907 ms
+SKIP SNAP__web-Google                   est_aa=6.07e+07 est_aat=1.38e+09 > cap
+OK   Schenk_IBMNA__c-20                 AA   C_nnz=     212913    9.069 ms
+OK   Schenk_IBMNA__c-20                 AAt  C_nnz=     212913    0.697 ms
+OK   Shen__shermanACb                   AA   C_nnz=     400519    1.089 ms
+OK   Shen__shermanACb                   AAt  C_nnz=  146608918   28.785 ms
+OK   Shyy__shyy41                       AA   C_nnz=      47215    0.398 ms
+OK   Shyy__shyy41                       AAt  C_nnz=      53376    0.396 ms
+OK   TOKAMAK__utm1700b                  AA   C_nnz=      74169    0.364 ms
+OK   TOKAMAK__utm1700b                  AAt  C_nnz=      90936    0.374 ms
+SKIP TSOPF__TSOPF_RS_b39_c19            est_aa=4.83e+06 est_aat=3.62e+09 > cap
+OK   VDOL__lowThrust_7                  AA   C_nnz=   46358098   13.684 ms
+OK   VDOL__lowThrust_7                  AAt  C_nnz=   46358098   16.680 ms
+SKIP VLSI__radiation                    est_aa=3.13e+08 est_aat=3.13e+08 > cap
+SKIP VanVelzen__Zd_Jac3                 est_aa=1.59e+08 est_aat=1.56e+09 > cap
+OK   Wang__swang1                       AA   C_nnz=      55439  165.150 ms
+OK   Wang__swang1                       AAt  C_nnz=      55439    1.159 ms
+
+wrote /home/chjin/lab_internship/appt_spgemm/results/baseline_group2.csv
