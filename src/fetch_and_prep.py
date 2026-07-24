@@ -49,8 +49,13 @@ def descriptors(A):
 
 def main():
     man = DATA / "manifest.csv"
+    for i, a in enumerate(sys.argv):
+        if a == "--manifest" and i + 1 < len(sys.argv):
+            man = Path(sys.argv[i + 1])
     rows = list(csv.DictReader(open(man)))
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else len(rows)
+    pos = [a for a in sys.argv[1:] if not a.startswith("--")
+           and a != str(man)]
+    limit = int(pos[0]) if pos else len(rows)
     only_smallest = "--smallest" in sys.argv
     if only_smallest:
         rows = sorted(rows, key=lambda r: int(r["nnz"]))[:limit]
