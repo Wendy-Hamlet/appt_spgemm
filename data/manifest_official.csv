@@ -1,0 +1,101 @@
+group,name,n,nnz,nnz_per_row,pattern_sym,kind
+Mycielski,mycielskian2,2,2,1.0,1.000,undirected graph
+Mycielski,mycielskian3,5,10,2.0,1.000,undirected graph
+vanHeukelum,cage3,5,19,3.8,1.000,directed weighted graph
+Grund,b1_ss,7,15,2.1,0.000,chemical process simulation problem
+vanHeukelum,cage4,9,49,5.4,1.000,directed weighted graph
+HB,jgl009,9,50,5.6,0.476,counter-example problem
+HB,rgg010,10,76,7.6,0.636,counter-example problem
+Pajek,Stranke94,10,90,9.0,1.000,undirected weighted graph
+Pajek,Tina_AskCal,11,29,2.6,0.276,directed graph
+Pajek,Tina_AskCog,11,36,3.3,0.500,directed graph
+Mycielski,mycielskian4,11,40,3.6,1.000,undirected graph
+Pajek,Tina_DisCal,11,41,3.7,0.439,directed graph
+Pajek,Tina_DisCog,11,48,4.4,0.500,directed graph
+HB,jgl011,11,76,6.9,0.515,counter-example problem
+Oberwolfach,LFAT5,14,46,3.3,1.000,model reduction problem
+Pajek,GD01_b,18,37,2.1,0.514,directed graph
+Oberwolfach,LF10,18,82,4.6,1.000,model reduction problem
+JGD_Trefethen,Trefethen_20b,19,147,7.7,1.000,combinatorial problem
+JGD_Trefethen,Trefethen_20,20,158,7.9,1.000,combinatorial problem
+Pajek,Ragusa18,23,64,2.8,0.328,directed weighted graph
+Pajek,GD02_a,23,87,3.8,0.644,directed graph
+Mycielski,mycielskian5,23,142,6.2,1.000,undirected graph
+Pajek,Ragusa16,24,81,3.4,0.366,directed weighted graph
+HB,can_24,24,160,6.7,1.000,structural problem
+HB,lap_25,25,169,6.8,1.000,structural problem
+FIDAP,ex5,27,279,10.3,1.000,computational fluid dynamics problem
+HB,pores_1,30,180,6.0,0.627,computational fluid dynamics problem
+Hamrle,Hamrle1,32,98,3.1,0.065,circuit simulation problem
+HB,ibm32,32,126,3.9,0.085,directed graph
+Pajek,GD01_c,33,135,4.1,0.000,directed multigraph
+Newman,karate,34,156,4.6,1.000,undirected graph
+Pajek,football,35,118,3.4,0.000,directed weighted graph
+Pajek,GD95_a,36,57,1.6,0.035,directed graph
+vanHeukelum,cage5,37,233,6.3,1.000,directed weighted graph
+Pajek,GD98_a,38,50,1.3,0.160,directed graph
+HB,bcspwr01,39,131,3.4,1.000,power network problem
+DIMACS10,chesapeake,39,340,8.7,1.000,undirected graph
+Pajek,GD97_b,47,264,5.6,1.000,undirected weighted graph
+Mycielski,mycielskian6,47,472,10.0,1.000,undirected graph
+HB,bcsstm01,48,24,0.5,1.000,structural problem
+Pothen,mesh1e1,48,306,6.4,1.000,structural problem
+Pothen,mesh1em1,48,306,6.4,1.000,structural problem
+Pothen,mesh1em6,48,306,6.4,1.000,structural problem
+HB,bcsstk01,48,400,8.3,1.000,structural problem
+HB,bcspwr02,49,167,3.4,1.000,power network problem
+Grund,d_ss,53,144,2.7,0.041,chemical process simulation problem
+HB,curtis54,54,291,5.4,0.954,2D/3D problem
+HB,will57,57,281,4.9,0.866,semiconductor device problem
+HB,dwt_59,59,267,4.5,1.000,structural problem
+HB,impcol_b,59,271,4.6,0.095,chemical process simulation problem
+HB,can_61,61,557,9.1,1.000,structural problem
+HB,can_62,62,218,3.5,1.000,structural problem
+Pajek,GD95_c,62,287,4.6,0.997,directed graph
+Newman,dolphins,62,318,5.1,1.000,undirected graph
+Bai,bfwb62,62,342,5.5,1.000,electromagnetics problem
+Bai,bfwa62,62,450,7.3,0.969,electromagnetics problem
+Pajek,GD99_b,64,252,3.9,1.000,undirected multigraph
+Pajek,GD96_c,65,250,3.8,1.000,undirected graph
+HB,bcsstm02,66,66,1.0,1.000,structural problem
+HB,dwt_66,66,320,4.8,1.000,structural problem
+Pothen,sphere2,66,450,6.8,1.000,structural problem
+Rommes,ww_36_pmec_36,66,1194,18.1,0.334,eigenvalue/model reduction problem
+HB,bcsstk02,66,4356,66.0,1.000,structural problem
+HB,west0067,67,294,4.4,0.034,chemical process simulation problem
+Pajek,GlossGT,72,122,1.7,0.066,directed graph
+HB,dwt_72,72,222,3.1,1.000,structural problem
+JGD_CAG,CAG_mat72,72,1012,14.1,0.557,combinatorial problem
+Pajek,GD95_b,73,96,1.3,0.000,directed graph
+HB,can_73,73,377,5.2,1.000,structural problem
+Newman,lesmis,77,508,6.6,1.000,undirected weighted graph
+Pajek,GD02_b,80,232,2.9,0.000,directed graph
+HB,steam3,80,314,3.9,1.000,computational fluid dynamics problem
+Pajek,GD97_a,84,332,4.0,1.000,directed graph
+JGD_Margulies,cat_ears_2_1,85,254,3.0,0.033,combinatorial problem
+HB,ash85,85,523,6.2,1.000,least squares problem
+Pajek,Sandi_authors,86,248,2.9,1.000,undirected weighted graph
+Grund,d_dyn,87,230,2.6,0.077,chemical process simulation problem
+Grund,d_dyn1,87,232,2.7,0.077,chemical process simulation problem
+HB,dwt_87,87,541,6.2,1.000,structural problem
+Bai,tols90,90,1746,19.4,0.269,computational fluid dynamics problem
+vanHeukelum,cage6,93,785,8.4,1.000,directed weighted graph
+Mycielski,mycielskian7,95,1510,15.9,1.000,undirected graph
+HB,can_96,96,768,8.0,1.000,structural problem
+VDOL,spaceStation_1,99,927,9.4,1.000,optimal control problem
+Bai,olm100,100,396,4.0,0.669,computational fluid dynamics problem
+Bai,tub100,100,396,4.0,1.000,computational fluid dynamics problem
+HB,nos4,100,594,5.9,1.000,structural problem
+Morandini,rotor1,100,708,7.1,0.514,structural problem
+Pajek,GD06_theory,101,380,3.8,1.000,undirected graph
+MathWorks,pivtol,102,306,3.0,0.990,statistical/mathematical problem
+Bai,ck104,104,992,9.5,1.000,2D/3D problem
+Pajek,GD99_c,105,149,1.4,0.389,directed graph
+JGD_Homology,n3c6-b1,105,210,2.0,0.086,combinatorial problem
+Newman,polbooks,105,882,8.4,1.000,undirected graph
+ML_Graph,breasttissue_10NN,106,1412,13.3,1.000,undirected weighted graph
+Pajek,GD96_b,111,193,1.7,0.000,directed graph
+HB,bcsstm03,112,72,0.6,1.000,structural problem
+Pajek,GD98_c,112,336,3.0,1.000,undirected graph
+HB,bcsstk03,112,640,5.7,1.000,structural problem
+Newman,adjnoun,112,850,7.6,1.000,undirected graph
