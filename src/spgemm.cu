@@ -69,7 +69,7 @@ __device__ static inline int ins(int* keys,int cap,int key){
 }
 __global__ void k_symbolic(int n,const int* Aoff,const int* Acol,const int* Boff,const int* Bcol,
                            const int64_t* flops,const int* rcap,const int64_t* hoff,const int64_t* gcap,
-                           int* gkeys,int* rowcnt){
+                           int* gkeys,int* rowcnt,int sym){
     extern __shared__ int sh[];
     int wib=threadIdx.x>>5, lane=threadIdx.x&31; int i=(blockIdx.x*WPB)+wib; if(i>=n)return;
     int64_t f=flops[i]; if(f==0){ if(lane==0)rowcnt[i]=0; return; }
@@ -78,7 +78,7 @@ __global__ void k_symbolic(int n,const int* Aoff,const int* Acol,const int* Boff
     if(rc>0){ keys=sh+wib*SH_CAP; cap=rc; } else { cap=(int)gcap[i]; keys=gkeys+hoff[i]; }
     for(int t=lane;t<cap;t+=32)keys[t]=-1; __syncwarp();
     for(int p=s;p<e;p++){int k=Acol[p]; int ks=Boff[k],ke=Boff[k+1];
-        for(int q=ks+lane;q<ke;q+=32) ins(keys,cap,Bcol[q]); }
+        for(int q=ks+lane;q<ke;q+=32){int j=Bcol[q]; if(sym&&j<i)continue; ins(keys,cap,j);} }
     __syncwarp();
     int cnt=0; for(int t=lane;t<cap;t+=32) if(keys[t]!=-1)cnt++;
     for(int o=16;o>0;o>>=1)cnt+=__shfl_down_sync(0xffffffff,cnt,o);
@@ -87,7 +87,7 @@ __global__ void k_symbolic(int n,const int* Aoff,const int* Acol,const int* Boff
 __global__ void k_numeric(int n,const int* Aoff,const int* Acol,const double* Aval,
                           const int* Boff,const int* Bcol,const double* Bval,
                           const int64_t* flops,const int* rcap,const int64_t* hoff,const int64_t* gcap,
-                          int* gkeys,double* gvals,const int* Coff,int64_t* Ckey,double* Cval){
+                          int* gkeys,double* gvals,const int* Coff,int64_t* Ckey,double* Cval,int sym){
     extern __shared__ char shm[];
     int wib=threadIdx.x>>5, lane=threadIdx.x&31;
     int* skeys=(int*)shm + wib*SH_CAP;
@@ -100,7 +100,7 @@ __global__ void k_numeric(int n,const int* Aoff,const int* Acol,const double* Av
     else { cap=(int)gcap[i]; keys=gkeys+hoff[i]; vals=gvals+hoff[i]; }
     for(int t=lane;t<cap;t+=32){keys[t]=-1; vals[t]=0.0;} __syncwarp();
     for(int p=s;p<e;p++){int k=Acol[p]; double aik=Aval[p]; int ks=Boff[k],ke=Boff[k+1];
-        for(int q=ks+lane;q<ke;q+=32){int slot=ins(keys,cap,Bcol[q]); atomicAdd(&vals[slot],aik*Bval[q]); } }
+        for(int q=ks+lane;q<ke;q+=32){int j=Bcol[q]; if(sym&&j<i)continue; int slot=ins(keys,cap,j); atomicAdd(&vals[slot],aik*Bval[q]); } }
     __syncwarp();
     // warp-uniform extract: ALL 32 lanes must reach __ballot_sync every iter,
     // so iterate in blocks of 32 (cap may be <32 or not a multiple of 32).
@@ -115,11 +115,21 @@ __global__ void k_numeric(int n,const int* Aoff,const int* Acol,const double* Av
 static void checksum(const std::vector<double>& v,double&s,double&as,double&sq){
     s=as=sq=0; for(double x:v){s+=x;as+=x<0?-x:x;sq+=x*x;}
 }
+// mirror upper-triangular C (task AAtS) to the full symmetric matrix:
+// each off-diagonal (i,j) also emits (j,i); diagonal stays once.
+__global__ void k_mirror(int n,int64_t U,const int64_t* Ck,const double* Cv,
+                         int64_t* Fk,double* Fv,int* dcnt){
+    int64_t t=(int64_t)blockIdx.x*blockDim.x+threadIdx.x; if(t>=U)return;
+    int64_t k=Ck[t]; double v=Cv[t]; Fk[t]=k; Fv[t]=v;
+    int ii=(int)(k/n), jj=(int)(k%n);
+    if(ii<jj){ int pos=atomicAdd(dcnt,1); Fk[pos]=(int64_t)jj*n+ii; Fv[pos]=v; }
+}
 
 int main(int argc,char**argv){
-    if(argc<4){fprintf(stderr,"usage: %s <tag> <bin.csr> <AA|AAt> [reps]\n",argv[0]);return 1;}
+    if(argc<4){fprintf(stderr,"usage: %s <tag> <bin.csr> <AA|AAt|AAtS> [reps]\n",argv[0]);return 1;}
     const char* tag=argv[1]; const char* task=argv[3]; int reps=argc>4?atoi(argv[4]):20;
-    bool AAt=(strcmp(task,"AAt")==0);
+    bool AAt=(strcmp(task,"AAt")==0); bool sym=(strcmp(task,"AAtS")==0);
+    bool needAt=AAt||sym; int SYM=sym?1:0;
     Csr h=load_bin(argv[2]); int n=h.n; int64_t nnz=h.nnz;
     int *dOff,*dCol; double *dVal;
     CK(cudaMalloc(&dOff,(n+1)*sizeof(int))); CK(cudaMalloc(&dCol,nnz*sizeof(int))); CK(cudaMalloc(&dVal,nnz*sizeof(double)));
@@ -129,7 +139,7 @@ int main(int argc,char**argv){
     int tpb=128;
     // B = A (AA) or A^T (AAt). For AAt allocate B and a transpose cursor.
     int *Boff,*Bcol,*dCursor=nullptr; double *Bval;
-    if(AAt){
+    if(needAt){
         CK(cudaMalloc(&Boff,(n+1)*sizeof(int))); CK(cudaMalloc(&Bcol,nnz*sizeof(int)));
         CK(cudaMalloc(&Bval,nnz*sizeof(double))); CK(cudaMalloc(&dCursor,n*sizeof(int)));
     } else { Boff=dOff; Bcol=dCol; Bval=dVal; }
@@ -160,31 +170,50 @@ int main(int argc,char**argv){
         CK(cudaMemcpy(&hl,dHoff+n-1,sizeof(int64_t),cudaMemcpyDeviceToHost)); total_h=hl+lg;
     };
     // ---- one-time sizing ----
-    if(AAt) build_At();
+    if(needAt) build_At();
     int64_t total_h; structure(total_h);
     int* gkeys=nullptr; double* gvals=nullptr;
     if(total_h>0){ CK(cudaMalloc(&gkeys,total_h*sizeof(int))); CK(cudaMalloc(&gvals,total_h*sizeof(double))); }
-    k_symbolic<<<nblocks,WPB*32,sh_sym>>>(n,dOff,dCol,Boff,Bcol,dFlops,dRcap,dHoff,dGcap,gkeys,dRowcnt);
+    if(total_h>0) CK(cudaMemset(gkeys,0xff,total_h*sizeof(int)));
+    k_symbolic<<<nblocks,WPB*32,sh_sym>>>(n,dOff,dCol,Boff,Bcol,dFlops,dRcap,dHoff,dGcap,gkeys,dRowcnt,SYM);
     thrust::exclusive_scan(prc,prc+n,pco);
     int lastc,cl; CK(cudaMemcpy(&lastc,dRowcnt+n-1,sizeof(int),cudaMemcpyDeviceToHost));
     CK(cudaMemcpy(&cl,dCoff+n-1,sizeof(int),cudaMemcpyDeviceToHost));
-    int64_t Cnnz=(int64_t)cl+lastc;
+    int64_t Cnnz=(int64_t)cl+lastc;                 // upper-tri nnz when sym, else full
     int64_t *Ckey,*Ckey_s; double *Cval,*Cval_s;
-    CK(cudaMalloc(&Ckey,Cnnz*sizeof(int64_t))); CK(cudaMalloc(&Ckey_s,Cnnz*sizeof(int64_t)));
-    CK(cudaMalloc(&Cval,Cnnz*sizeof(double)));  CK(cudaMalloc(&Cval_s,Cnnz*sizeof(double)));
+    CK(cudaMalloc(&Ckey,Cnnz*sizeof(int64_t))); CK(cudaMalloc(&Cval,Cnnz*sizeof(double)));
+    // sym: mirror upper -> full in F buffers (<=2*Cnnz); else sort C in place.
+    int64_t *Fk=nullptr,*Fks=nullptr; double *Fv=nullptr,*Fvs=nullptr; int* dcnt=nullptr;
     void* d_temp=nullptr; size_t tb=0;
-    cub::DeviceRadixSort::SortPairs(d_temp,tb,Ckey,Ckey_s,Cval,Cval_s,(int)Cnnz);
+    if(sym){
+        CK(cudaMalloc(&Fk,2*Cnnz*sizeof(int64_t))); CK(cudaMalloc(&Fks,2*Cnnz*sizeof(int64_t)));
+        CK(cudaMalloc(&Fv,2*Cnnz*sizeof(double)));  CK(cudaMalloc(&Fvs,2*Cnnz*sizeof(double)));
+        CK(cudaMalloc(&dcnt,sizeof(int)));
+        cub::DeviceRadixSort::SortPairs(d_temp,tb,Fk,Fks,Fv,Fvs,(int)(2*Cnnz));
+    } else {
+        CK(cudaMalloc(&Ckey_s,Cnnz*sizeof(int64_t))); CK(cudaMalloc(&Cval_s,Cnnz*sizeof(double)));
+        cub::DeviceRadixSort::SortPairs(d_temp,tb,Ckey,Ckey_s,Cval,Cval_s,(int)Cnnz);
+    }
     CK(cudaMalloc(&d_temp,tb));
 
+    int64_t report_nnz=Cnnz;
     auto compute=[&](bool chk,double&s,double&as,double&sq){
-        if(AAt) build_At();
+        if(needAt) build_At();
         int64_t th; structure(th);
         if(total_h>0) CK(cudaMemset(gkeys,0xff,total_h*sizeof(int)));
-        k_symbolic<<<nblocks,WPB*32,sh_sym>>>(n,dOff,dCol,Boff,Bcol,dFlops,dRcap,dHoff,dGcap,gkeys,dRowcnt);
+        k_symbolic<<<nblocks,WPB*32,sh_sym>>>(n,dOff,dCol,Boff,Bcol,dFlops,dRcap,dHoff,dGcap,gkeys,dRowcnt,SYM);
         thrust::exclusive_scan(prc,prc+n,pco);
-        k_numeric<<<nblocks,WPB*32,sh_num>>>(n,dOff,dCol,dVal,Boff,Bcol,Bval,dFlops,dRcap,dHoff,dGcap,gkeys,gvals,dCoff,Ckey,Cval);
-        cub::DeviceRadixSort::SortPairs(d_temp,tb,Ckey,Ckey_s,Cval,Cval_s,(int)Cnnz);
-        if(chk){ std::vector<double> hv(Cnnz); CK(cudaMemcpy(hv.data(),Cval_s,Cnnz*sizeof(double),cudaMemcpyDeviceToHost)); checksum(hv,s,as,sq); }
+        k_numeric<<<nblocks,WPB*32,sh_num>>>(n,dOff,dCol,dVal,Boff,Bcol,Bval,dFlops,dRcap,dHoff,dGcap,gkeys,gvals,dCoff,Ckey,Cval,SYM);
+        if(sym){
+            int u=(int)Cnnz; CK(cudaMemcpy(dcnt,&u,sizeof(int),cudaMemcpyHostToDevice));
+            k_mirror<<<(int)((Cnnz+tpb-1)/tpb),tpb>>>(n,Cnnz,Ckey,Cval,Fk,Fv,dcnt);
+            int fc; CK(cudaMemcpy(&fc,dcnt,sizeof(int),cudaMemcpyDeviceToHost)); report_nnz=fc;
+            cub::DeviceRadixSort::SortPairs(d_temp,tb,Fk,Fks,Fv,Fvs,fc);
+            if(chk){ std::vector<double> hv(fc); CK(cudaMemcpy(hv.data(),Fvs,(size_t)fc*sizeof(double),cudaMemcpyDeviceToHost)); checksum(hv,s,as,sq); }
+        } else {
+            cub::DeviceRadixSort::SortPairs(d_temp,tb,Ckey,Ckey_s,Cval,Cval_s,(int)Cnnz);
+            if(chk){ std::vector<double> hv(Cnnz); CK(cudaMemcpy(hv.data(),Cval_s,Cnnz*sizeof(double),cudaMemcpyDeviceToHost)); checksum(hv,s,as,sq); }
+        }
     };
     double s,as,sq; compute(true,s,as,sq); CK(cudaDeviceSynchronize());
     cudaEvent_t e0,e1; cudaEventCreate(&e0);cudaEventCreate(&e1); cudaEventRecord(e0);
@@ -192,6 +221,6 @@ int main(int argc,char**argv){
     cudaEventRecord(e1); cudaEventSynchronize(e1);
     float ms=0; cudaEventElapsedTime(&ms,e0,e1); ms/=reps;
     printf("  __chk s=%.6e as=%.6e sq=%.6e\n",s,as,sq);
-    printf("RESULT,%s,%s,%d,%lld,%lld,%.4f\n",tag,task,n,(long long)nnz,(long long)Cnnz,ms);
+    printf("RESULT,%s,%s,%d,%lld,%lld,%.4f\n",tag,task,n,(long long)nnz,(long long)report_nnz,ms);
     return 0;
 }
