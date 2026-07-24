@@ -1,6 +1,7 @@
 # Downloaded / derived matrix data (large, reproducible via src/fetch_and_prep.py)
 data/mtx/
 data/csr/
+data/bin/
 
 # Build artifacts
 *.o
