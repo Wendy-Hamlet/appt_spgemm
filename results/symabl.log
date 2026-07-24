@@ -1,0 +1,6 @@
+
+== AAtS symmetric ablation: 129 matrices, mismatches=0 ==
+AAtS/AAt speedup: geomean=0.966x  median=0.898x  wins(>=1x)=34/129  range=[0.12,19.78]
+  small nnz<1e5   : n=104 geomean=0.923x
+  med 1e5-1e6     : n=16 geomean=1.119x
+  large>1e6       : n=9 geomean=1.258x

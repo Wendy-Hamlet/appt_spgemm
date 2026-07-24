@@ -117,9 +117,11 @@ A single templated engine computes `C = A·B` and is instantiated as `B = A`
   part of the op) and runs the same engine.
 - **Symmetric variant (`A·AᵀS`).** Exploiting `C = A·Aᵀ` symmetric, we hash only
   `j ≥ i` (halving accumulation work) and mirror the upper triangle to the full
-  matrix. This gives ~1.14–1.15× over the plain `A·Aᵀ` on medium/large matrices
-  (e.g. circuit_2, bcsstk13) but loses on tiny matrices where the mirror overhead
-  dominates — a size-dependent trade-off the dispatcher can also arbitrate.
+  matrix. It is byte-exact against the plain `A·Aᵀ` on all 129 evaluated matrices,
+  and its payoff is **size-dependent** (§6, Table 3): net-negative on small
+  matrices (the mirror + full-result sort outweigh the halved hashing) but
+  1.12–1.26× on medium/large — so the symmetry optimization is itself a candidate
+  for dispatch (enable it only for large `A·Aᵀ`).
 
 ## 5. Correctness
 
@@ -158,6 +160,21 @@ Speedups are cuSPARSE-time ÷ our-time; `>1` means we are faster.
   matrices we lose in aggregate (0.71×), driven by a few outliers where our simple
   hashing is far slower (e.g. shermanACb `A·A` ~50×). This is exactly where a
   dispatcher must send work to cuSPARSE.
+
+**Table 3 — symmetric-`A·Aᵀ` ablation (`A·AᵀS` vs plain `A·Aᵀ`, 129 matrices,
+0 mismatches).** Speedup is plain-time ÷ symmetric-time.
+
+| size (nnz) | matrices | geomean speedup |
+|---|---|---|
+| small (< 1e5) | 104 | 0.92× (slower) |
+| medium (1e5–1e6) | 16 | 1.12× |
+| large (> 1e6) | 9 | 1.26× |
+| all | 129 | 0.97× |
+
+The optimization halves the accumulation work but adds a mirror pass and sorts the
+full (2×) result; on the small-matrix regime that dominates the suite the overhead
+wins, while on larger `A·Aᵀ` it pays off — a clean example of a kernel-level
+optimization whose benefit is itself structure/size dependent.
 
 ## 7. Structure-Aware Dispatch (Zero Profiling)
 
