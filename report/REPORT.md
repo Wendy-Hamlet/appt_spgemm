@@ -118,7 +118,7 @@ A single templated engine computes `C = A·B` and is instantiated as `B = A`
 - **Symmetric variant (`A·AᵀS`).** Exploiting `C = A·Aᵀ` symmetric, we hash only
   `j ≥ i` (halving accumulation work) and mirror the upper triangle to the full
   matrix. It is byte-exact against the plain `A·Aᵀ` on all 129 evaluated matrices,
-  and its payoff is **size-dependent** (§6, Table 3): net-negative on small
+  and its payoff is **size-dependent** (§6, Table 2): net-negative on small
   matrices (the mirror + full-result sort outweigh the halved hashing) but
   1.12–1.26× on medium/large — so the symmetry optimization is itself a candidate
   for dispatch (enable it only for large `A·Aᵀ`).
@@ -161,7 +161,7 @@ Speedups are cuSPARSE-time ÷ our-time; `>1` means we are faster.
   hashing is far slower (e.g. shermanACb `A·A` ~50×). This is exactly where a
   dispatcher must send work to cuSPARSE.
 
-**Table 3 — symmetric-`A·Aᵀ` ablation (`A·AᵀS` vs plain `A·Aᵀ`, 129 matrices,
+**Table 2 — symmetric-`A·Aᵀ` ablation (`A·AᵀS` vs plain `A·Aᵀ`, 129 matrices,
 0 mismatches).** Speedup is plain-time ÷ symmetric-time.
 
 | size (nnz) | matrices | geomean speedup |
@@ -183,7 +183,7 @@ Because neither implementation dominates, we select per (matrix, task) from
 **degree coefficient-of-variation `deg_cv`**, estimated fill, pattern symmetry) —
 no timing or trial runs at decision time.
 
-**Table 2 — whole-benchmark dispatch (258 tasks, total time).**
+**Table 3 — whole-benchmark dispatch (258 tasks, total time).**
 
 | Policy | total | speedup vs cuSPARSE | notes |
 |---|---|---|---|
@@ -198,11 +198,11 @@ importance 0.81 vs 0.12 (fill) and 0.07 (nnz) — i.e. the decision is driven by
 exactly the irregularity that makes SpGEMM hard. This is the same methodological
 move as predicting a per-unit execution policy from a cheap static descriptor,
 and it turns "one kernel can't win everywhere" into a concrete, profiling-free
-2.42× system.
+system (realized online in §7.1).
 
 ### 7.1 Online dispatcher
 
-Table 2 is an offline analysis over measured times. We also implemented the
+Table 3 is an offline analysis over measured times. We also implemented the
 dispatcher **online** (`bench/dispatch.cu`): at call time it computes the
 structural descriptors from the CSR, applies a fixed decision rule (a depth-3
 tree distilled to `use ours iff (deg_cv≤0.63 ∧ fill≤53) ∨ (deg_cv>0.63 ∧
@@ -248,7 +248,7 @@ library) rather than only among internal variants.
 Real-world SpGEMM is a generality problem. We built a correct (0/258 mismatches),
 portable, competitive hash engine for both challenge tasks, showed that neither it
 nor the vendor library wins everywhere, and turned that into a **profiling-free
-structure-aware dispatcher reaching 2.42× over cuSPARSE (83% of oracle), driven by
+structure-aware dispatcher reaching 2.63× over cuSPARSE (88% of oracle), driven by
 row-length imbalance**. The approach is robust by construction — it routes each
 matrix to whatever solves it fastest — which is precisely what a general,
 real-world SpGEMM solver needs.
