@@ -1,49 +1,43 @@
-OK Gset__G57                    AA spd=3.36x AAt spd=2.29x
-OK HB__sherman3                 AA spd=3.35x AAt spd=2.28x
-OK Shyy__shyy41                 AA spd=3.36x AAt spd=2.54x
-OK Bai__rw5151                  AA spd=3.41x AAt spd=2.36x
-  FAIL SNAP__CollegeMsg AAt
-OK SNAP__CollegeMsg             AA spd=6.55x AAt spd=0.00x
-OK Oberwolfach__t3dl_e          AA spd=3.35x AAt spd=2.29x
-OK Schenk_IBMNA__c-20           AA spd=3.21x AAt spd=2.30x
-OK SNAP__p2p-Gnutella08         AA spd=3.30x AAt spd=2.23x
-OK Wang__swang1                 AA spd=3.36x AAt spd=2.27x
-OK Bomhof__circuit_2            AA spd=1.59x AAt spd=0.82x
-OK TOKAMAK__utm1700b            AA spd=5.05x AAt spd=3.54x
-OK Hamrle__Hamrle2              AA spd=3.35x AAt spd=2.27x
-OK Rommes__bips98_606           AA spd=3.33x AAt spd=2.30x
-  MISMATCH SNAP__soc-sign-bitcoin-otc AAt: ours nnz=1415005 chk=(9092686.0, 14194530.0, 3486631000.0) vs cus nnz=1414978 chk=(9092508.0, 14194350.0, 3486628000.0)
-OK SNAP__soc-sign-bitcoin-otc   AA spd=1.79x AAt spd=1.76x
-OK Rommes__bips07_1693          AA spd=3.32x AAt spd=2.37x
-OK DRIVCAV__cavity10            AA spd=3.66x AAt spd=2.50x
-OK Shen__shermanACb             AA spd=0.16x AAt spd=0.35x
-OK VDOL__lowThrust_7            AA spd=0.21x AAt spd=0.75x
-OK Mallya__lhr10                AA spd=57.15x AAt spd=18.49x
-OK ML_Graph__worms20_10NN       AA spd=3.72x AAt spd=2.87x
-OK Cylshell__s1rmq4m1           AA spd=46.72x AAt spd=27.56x
-  FAIL Oberwolfach__inlet AA
-OK Oberwolfach__inlet           AA spd=0.00x AAt spd=19.03x
-OK GHS_indef__ncvxbqp1          AA spd=27.99x AAt spd=5.36x
+OK Gset__G57                    AA spd=2.34x AAt spd=3.10x
+OK HB__sherman3                 AA spd=0.08x AAt spd=0.05x
+OK Shyy__shyy41                 AA spd=7.84x AAt spd=2.00x
+OK Bai__rw5151                  AA spd=17.34x AAt spd=0.14x
+OK SNAP__CollegeMsg             AA spd=20.49x AAt spd=17.48x
+OK Oberwolfach__t3dl_e          AA spd=1.34x AAt spd=1.96x
+OK Schenk_IBMNA__c-20           AA spd=0.89x AAt spd=0.57x
+OK SNAP__p2p-Gnutella08         AA spd=1.50x AAt spd=0.24x
+OK Wang__swang1                 AA spd=61.40x AAt spd=1.91x
+OK Bomhof__circuit_2            AA spd=0.45x AAt spd=0.24x
+OK TOKAMAK__utm1700b            AA spd=1.84x AAt spd=0.05x
+OK Hamrle__Hamrle2              AA spd=30.80x AAt spd=3.83x
+OK Rommes__bips98_606           AA spd=3.38x AAt spd=2.13x
+OK SNAP__soc-sign-bitcoin-otc   AA spd=0.13x AAt spd=0.09x
+OK Rommes__bips07_1693          AA spd=2.87x AAt spd=2.27x
+OK DRIVCAV__cavity10            AA spd=2.55x AAt spd=1.72x
+OK Shen__shermanACb             AA spd=0.02x AAt spd=0.28x
+OK VDOL__lowThrust_7            AA spd=0.18x AAt spd=0.28x
+OK Mallya__lhr10                AA spd=1.50x AAt spd=1.27x
+OK ML_Graph__worms20_10NN       AA spd=2.30x AAt spd=0.29x
+OK Cylshell__s1rmq4m1           AA spd=14.60x AAt spd=13.90x
+OK Oberwolfach__inlet           AA spd=1.94x AAt spd=1.86x
+OK GHS_indef__ncvxbqp1          AA spd=1.40x AAt spd=1.33x
 SKIP SNAP__email-EuAll
 SKIP Rajat__rajat18
 SKIP Rajat__rajat25
 SKIP TSOPF__TSOPF_RS_b39_c19
-OK QLi__crashbasis              AA spd=1.29x AAt spd=1.94x
-OK QLi__majorbasis              AA spd=1.29x AAt spd=1.93x
+OK QLi__crashbasis              AA spd=2.88x AAt spd=9.52x
+OK QLi__majorbasis              AA spd=1.52x AAt spd=2.04x
 SKIP VanVelzen__Zd_Jac3
 SKIP Rajat__rajat29
-OK Raju__laminar_duct3D         AA spd=1.86x AAt spd=2.25x
+OK Raju__laminar_duct3D         AA spd=0.33x AAt spd=0.15x
 SKIP SNAP__web-Google
-  FAIL LAW__amazon-2008 AAt
-OK LAW__amazon-2008             AA spd=3.07x AAt spd=0.00x
-OK QLi__largebasis              AA spd=1.02x AAt spd=0.93x
+OK LAW__amazon-2008             AA spd=3.62x AAt spd=2.00x
+OK QLi__largebasis              AA spd=1.10x AAt spd=1.00x
 SKIP Muite__Chebyshev4
 SKIP VLSI__radiation
-  FAIL Goodwin__Goodwin_127 AA
-  FAIL Goodwin__Goodwin_127 AAt
-OK Goodwin__Goodwin_127         AA spd=0.00x AAt spd=0.00x
+OK Goodwin__Goodwin_127         AA spd=2.58x AAt spd=2.40x
 SKIP ATandT__pre2
 SKIP PARSEC__Ga3As3H12
 SKIP SNAP__com-Youtube
 
-== group2: ok_tasks=53 mismatches=1 skipped=12 -> /home/chjin/lab_internship/appt_spgemm/results/compare_group2.csv
+== group2: ok_tasks=58 mismatches=0 skipped=12 -> /home/chjin/lab_internship/appt_spgemm/results/compare_group2.csv
