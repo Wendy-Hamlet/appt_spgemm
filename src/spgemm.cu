@@ -15,7 +15,7 @@
 #include <vector>
 
 #define CK(x) do{ cudaError_t e=(x); if(e){fprintf(stderr,"CUDA %s:%d %s\n",__FILE__,__LINE__,cudaGetErrorString(e));exit(1);} }while(0)
-static const int SH_CAP=1024, SH_LOAD=SH_CAP*3/4, WPB=4;
+static const int SH_CAP=1024, WPB=4;   // rows whose hash fits SH_CAP use shared path
 
 struct Csr { int n; int64_t nnz; std::vector<int> indptr, indices; std::vector<double> data; };
 static Csr load_bin(const char* path){
@@ -29,7 +29,6 @@ static Csr load_bin(const char* path){
     if((int64_t)fread(c.data.data(),8,c.nnz,f)!=c.nnz)exit(1);
     fclose(f); return c;
 }
-__host__ __device__ static inline int np2i(int x){ if(x<2)return 2; int p=2; while(p<x)p<<=1; return p; }
 __host__ __device__ static inline int64_t np2l(int64_t x){ if(x<2)return 2; int64_t p=2; while(p<x)p<<=1; return p; }
 
 // ---- transpose A (CSR n x n) -> B = A^T (CSR) ----
@@ -50,13 +49,23 @@ __global__ void k_flops(int n,const int* Aoff,const int* Acol,const int* Boff,in
 }
 __global__ void k_caps(int n,const int64_t* flops,int* rcap,int64_t* gcap){
     int i=blockIdx.x*blockDim.x+threadIdx.x; if(i>=n)return; int64_t f=flops[i];
-    if(f==0){rcap[i]=0;gcap[i]=0;} else if(f<=SH_LOAD){rcap[i]=np2i((int)((f*4)/3+1));gcap[i]=0;}
-    else {rcap[i]=0;gcap[i]=np2l((f*4)/3+1);}
+    if(f==0){rcap[i]=0;gcap[i]=0;return;}
+    int64_t want=np2l((f*4)/3+1);            // ~1.33x load factor, power of 2
+    if(want<=SH_CAP){rcap[i]=(int)want;gcap[i]=0;}   // fits shared slice -> shared path
+    else {rcap[i]=0;gcap[i]=want;}                    // else global-arena path
 }
+// Pure-atomicCAS open-addressing insert: robust for BOTH shared and global
+// memory. A plain pre-read of keys[h] is unsafe in shared memory (the compiler
+// may cache it / not observe other lanes' atomicCAS writes), which duplicated
+// keys across slots -> over-counted nnz + nondeterminism. Every probe is an
+// atomicCAS instead.
 __device__ static inline int ins(int* keys,int cap,int key){
     unsigned h=((unsigned)key*2654435761u)&(cap-1);
-    while(true){int cur=keys[h]; if(cur==key)return (int)h;
-        if(cur==-1){int p=atomicCAS(&keys[h],-1,key); if(p==-1||p==key)return (int)h;} h=(h+1)&(cap-1);}
+    while(true){
+        int cur=atomicCAS(&keys[h],-1,key);   // claim if empty; else read occupant
+        if(cur==-1||cur==key) return (int)h;   // inserted, or already present
+        h=(h+1)&(cap-1);
+    }
 }
 __global__ void k_symbolic(int n,const int* Aoff,const int* Acol,const int* Boff,const int* Bcol,
                            const int64_t* flops,const int* rcap,const int64_t* hoff,const int64_t* gcap,
@@ -93,10 +102,15 @@ __global__ void k_numeric(int n,const int* Aoff,const int* Acol,const double* Av
     for(int p=s;p<e;p++){int k=Acol[p]; double aik=Aval[p]; int ks=Boff[k],ke=Boff[k+1];
         for(int q=ks+lane;q<ke;q+=32){int slot=ins(keys,cap,Bcol[q]); atomicAdd(&vals[slot],aik*Bval[q]); } }
     __syncwarp();
-    for(int t=lane;t<cap;t+=32){int key=keys[t]; unsigned mk=__ballot_sync(0xffffffff,key!=-1);
+    // warp-uniform extract: ALL 32 lanes must reach __ballot_sync every iter,
+    // so iterate in blocks of 32 (cap may be <32 or not a multiple of 32).
+    for(int base=0;base<cap;base+=32){
+        int t=base+lane; int key=(t<cap)?keys[t]:-1;
+        unsigned mk=__ballot_sync(0xffffffff,key!=-1);
         int rank=__popc(mk&((1u<<lane)-1));
         if(key!=-1){int pos=wpos+rank; Ckey[pos]=(int64_t)i*n+key; Cval[pos]=vals[t];}
-        wpos+=__popc(mk); }
+        wpos+=__popc(mk);
+    }
 }
 static void checksum(const std::vector<double>& v,double&s,double&as,double&sq){
     s=as=sq=0; for(double x:v){s+=x;as+=x<0?-x:x;sq+=x*x;}
