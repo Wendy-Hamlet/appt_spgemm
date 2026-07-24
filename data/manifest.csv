@@ -1,0 +1,42 @@
+group,name,nrows,nnz,nnz_per_row,pattern_sym,num_sym,kind
+Gset,G57,5000,20000,4.0,1.000,1.000,undirected weighted random graph
+HB,sherman3,5005,20033,4.0,1.000,0.453,computational fluid dynamics problem
+Shyy,shyy41,4720,20042,4.2,0.723,0.184,computational fluid dynamics problem
+Bai,rw5151,5151,20199,3.9,0.490,0.000,statistical/mathematical problem
+SNAP,CollegeMsg,1899,20296,10.7,0.636,0.263,directed temporal multigraph
+Oberwolfach,t3dl_e,20360,20360,1.0,1.000,1.000,duplicate model reduction problem
+Schenk_IBMNA,c-20,2921,20445,7.0,1.000,1.000,optimization problem
+SNAP,p2p-Gnutella08,6301,20777,3.3,0.000,0.000,directed graph
+Wang,swang1,3169,20841,6.6,1.000,0.000,semiconductor device problem sequence
+Bomhof,circuit_2,4510,21199,4.7,0.807,0.415,circuit simulation problem
+TOKAMAK,utm1700b,1700,21509,12.7,0.523,0.000,electromagnetics problem
+Hamrle,Hamrle2,5952,22162,3.7,0.001,0.000,circuit simulation problem
+Rommes,bips98_606,7135,34738,4.9,0.909,0.758,eigenvalue/model reduction problem
+SNAP,soc-sign-bitcoin-otc,5881,35592,6.1,0.792,0.569,directed weighted temporal graph
+Rommes,bips07_1693,13275,49044,3.7,0.707,0.585,eigenvalue/model reduction problem
+DRIVCAV,cavity10,2597,76171,29.3,0.937,0.640,computational fluid dynamics problem sequence
+Shen,shermanACb,18510,145149,7.8,0.149,0.027,2D/3D problem
+VDOL,lowThrust_7,17378,211561,12.2,1.000,1.000,optimal control problem
+Mallya,lhr10,10672,228395,21.4,0.009,0.000,chemical process simulation problem
+ML_Graph,worms20_10NN,20055,240826,12.0,1.000,1.000,undirected weighted graph
+Cylshell,s1rmq4m1,5489,262411,47.8,1.000,1.000,structural problem
+Oberwolfach,inlet,11730,328323,28.0,0.608,0.000,model reduction problem
+GHS_indef,ncvxbqp1,50000,349968,7.0,1.000,1.000,optimization problem
+SNAP,email-EuAll,265214,420045,1.6,0.260,0.260,directed graph
+Rajat,rajat18,94294,479151,5.1,0.626,0.285,circuit simulation problem
+Rajat,rajat25,87190,606489,7.0,0.991,0.112,circuit simulation problem
+TSOPF,TSOPF_RS_b39_c19,38098,684206,18.0,0.059,0.000,power network problem
+QLi,crashbasis,160000,1750416,10.9,0.550,0.000,optimization problem
+QLi,majorbasis,160000,1750416,10.9,0.550,0.000,optimization problem
+VanVelzen,Zd_Jac3,22835,1915726,83.9,0.000,0.000,chemical process simulation problem
+Rajat,rajat29,643994,3760246,5.8,0.686,0.691,circuit simulation problem
+Raju,laminar_duct3D,67173,3788857,56.4,0.902,0.552,computational fluid dynamics problem
+SNAP,web-Google,916428,5105039,5.6,0.307,0.307,directed graph
+LAW,amazon-2008,735323,5158388,7.0,0.634,0.634,directed graph
+QLi,largebasis,440020,5240084,11.9,1.000,0.000,optimization problem
+Muite,Chebyshev4,68121,5377761,78.9,0.302,0.000,structural problem
+VLSI,radiation,223104,5526637,24.8,1.000,0.189,semiconductor device problem
+Goodwin,Goodwin_127,178437,5778545,32.4,0.990,0.066,computational fluid dynamics
+ATandT,pre2,659033,5834044,8.9,0.332,0.065,frequency-domain circuit simulation problem
+PARSEC,Ga3As3H12,61349,5970947,97.3,1.000,1.000,theoretical/quantum chemistry problem
+SNAP,com-Youtube,1134890,5975248,5.3,1.000,1.000,undirected graph with communities

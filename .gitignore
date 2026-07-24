@@ -1,0 +1,21 @@
+# Downloaded / derived matrix data (large, reproducible via src/fetch_and_prep.py)
+data/mtx/
+data/csr/
+
+# Build artifacts
+*.o
+*.so
+*.out
+build/
+__pycache__/
+*.pyc
+.cache/
+
+# Benchmark raw dumps (keep summarized CSVs under results/ tracked)
+results/raw/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
