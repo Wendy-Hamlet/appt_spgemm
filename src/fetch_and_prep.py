@@ -16,7 +16,7 @@ PROJ = Path(__file__).resolve().parent.parent
 DATA = PROJ / "data"
 MTX = DATA / "mtx"; MTX.mkdir(exist_ok=True)
 CSR = DATA / "csr"; CSR.mkdir(exist_ok=True)
-MIRROR = "https://suitesparse-collection-website.herokuapp.com/MM"
+MIRROR = "https://sparse.tamu.edu/MM"  # canonical mirror (herokuapp is dead)
 PROXY = "http://192.168.48.122:3128"
 
 opener = urllib.request.build_opener(
