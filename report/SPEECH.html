@@ -1,0 +1,404 @@
+<!doctype html><html><head><meta charset='utf-8'><title>Speech Script — Structure-Aware SpGEMM</title><style>
+:root{
+  --ink:#16191f; --ink-2:#48525f; --ink-3:#7c8695;
+  --accent:#17509e; --accent-soft:#eaf0fa; --rule:#d8dee8; --panel:#f4f6fa;
+  --serif:"DejaVu Serif","Liberation Serif","WenQuanYi Micro Hei",Georgia,serif;
+  --sans:"DejaVu Sans","Liberation Sans","WenQuanYi Micro Hei",Arial,sans-serif;
+  --mono:"DejaVu Sans Mono","Liberation Mono",monospace;
+}
+@page{ size:A4; margin:19mm 17mm 17mm; }
+*{box-sizing:border-box}
+body{font-family:var(--serif); font-size:11.4pt; line-height:1.72; color:var(--ink);
+     margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+
+/* ---- masthead ---- */
+h1{font-family:var(--sans); font-size:19pt; line-height:1.2; font-weight:700;
+   letter-spacing:-.2pt; margin:0 0 2mm}
+h3{font-family:var(--sans); font-size:9.5pt; font-weight:400; color:var(--ink-2);
+   margin:0 0 5mm; letter-spacing:.02em}
+
+/* ---- production notes: everything NOT spoken lives in this box ---- */
+.notes{background:var(--panel); border-left:3pt solid var(--accent);
+  padding:4mm 5mm; margin:0 0 9mm; font-family:var(--sans); font-size:8.9pt;
+  line-height:1.55; color:var(--ink-2); break-inside:avoid}
+.notes p{margin:0 0 2.4mm} .notes p:last-child{margin:0}
+.notes em{font-style:normal} .notes strong{color:var(--ink)}
+.notes::before{content:"Production notes — not spoken"; display:block;
+  font-size:7.6pt; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--accent); margin-bottom:2.2mm}
+
+/* ---- slide sections: the number is the wayfinding device ---- */
+h2{font-family:var(--sans); font-size:12.4pt; font-weight:700; color:var(--ink);
+   margin:9mm 0 3.5mm; padding-bottom:2mm; border-bottom:.6pt solid var(--rule);
+   break-after:avoid; break-inside:avoid}
+h2 .n{display:inline-block; min-width:9.4mm; margin-right:2.6mm; padding:.4mm 0;
+   text-align:center; background:var(--accent); color:#fff; border-radius:1.2mm;
+   font-size:10pt; font-variant-numeric:tabular-nums}
+h2.plain{margin-top:11mm}
+h2.plain::before{content:""}
+
+/* ---- spoken prose ---- */
+p{margin:0 0 3.6mm; orphans:2; widows:2}
+strong{font-weight:700}
+code{font-family:var(--mono); font-size:.86em; background:var(--accent-soft);
+  color:var(--accent); padding:.3mm 1mm; border-radius:.8mm}
+
+/* pause mark: visible when scanning, silent when reading. Rendered as the
+   literal "//" of the source so the production note stays true, and glued to
+   the preceding word by an nbsp so it can never orphan onto the next line. */
+.pause{font-family:var(--sans); color:var(--accent); font-size:.8em;
+  opacity:.5; letter-spacing:-.3pt}
+
+/* ---- Q&A ---- */
+ul{margin:0; padding:0; list-style:none}
+ul li{margin:0 0 4mm; padding-left:5mm; border-left:1.6pt solid var(--rule);
+  break-inside:avoid; font-size:10.4pt; line-height:1.62; color:var(--ink-2)}
+ul li strong:first-child{display:block; color:var(--ink); margin-bottom:1mm;
+  font-family:var(--sans); font-size:9.9pt}
+
+/* ---- pronunciation tables ---- */
+table{width:100%; border-collapse:collapse; margin:2mm 0 6mm; font-size:9.6pt;
+  break-inside:auto}
+thead th{font-family:var(--sans); font-size:7.8pt; font-weight:700; text-align:left;
+  text-transform:uppercase; letter-spacing:.09em; color:var(--ink-3);
+  border-bottom:.6pt solid var(--rule); padding:1.4mm 2mm}
+td{padding:1.5mm 2mm; border-bottom:.35pt solid var(--rule); vertical-align:top;
+  line-height:1.45}
+tbody tr{break-inside:avoid}
+td:nth-child(2){font-family:var(--sans); color:var(--ink-2); white-space:nowrap}
+h4{font-family:var(--sans); font-size:9.6pt; font-weight:700; color:var(--accent);
+  margin:6mm 0 1mm; break-after:avoid}
+hr{display:none}
+</style></head><body><h1>Speech Script — Structure-Aware SpGEMM</h1>
+<h3>APPT 2026 · Student GPU Programming Challenge · online talk (all English)</h3><div class='notes'><p><em>Pause at each "//" mark and at the end of every slide. Better a little slow than rushed.</em></p>
+<p><em>Editorial rules for this version: </em><em>explain the reason, don't read the formula.</em><em> Numbers survive only if the audience can do something with them; the exact thresholds stay on the slide and get pointed at, not recited. Plain spoken register — short sentences, concrete verbs, no "it is not X, it is Y" scaffolding.</em></p>
+<p><em>Spoken body = </em><em>1221 words → 9.4–9.8 minutes</em><em> at 125–130 wpm with pauses. Inside the window — </em><em>still rehearse against a timer</em><em>. If it runs long on the day, the one remaining cut is slide 6's descriptor-cost sentence (~36 words); the Q&amp;A covers it verbatim. Background the audience already has — the row-wise formulation, warp width — is deliberately not spoken; so is the symmetric-<code>A·Aᵀ</code> variant, which lives only in Q&amp;A.</em></p></div><h2><span class="n">1</span>Title</h2>
+<p>Good afternoon, and thanks for having me.<span class="pause">  //</span></p>
+<p>We were asked to multiply sparse matrices on a GPU — a hundred real matrices from SuiteSparse, two products each: A times A, and A times A-transpose.<span class="pause">  //</span></p>
+<p>We built two things: a hash-based kernel of our own, and a small piece of logic that looks at a matrix and decides whether to run our kernel or hand the work to cuSPARSE. That second piece is what this talk is really about.<span class="pause">  //</span></p>
+<p>One note on the setup. We compile for S-M eighty and target an A100, but we measured on an H100 with those same binaries. I'll come back to that.</p>
+<hr />
+<h2><span class="n">2</span>Background</h2>
+<p>Both our products come out of the same row-wise merge: A times A, and the Gram product, A times A-transpose.<span class="pause">  //</span></p>
+<p>Why is this hard on a GPU? Three reasons, and none of them is the arithmetic. <strong>You don't know how big the answer is</strong> until you have computed it, so you cannot allocate up front. <strong>Row lengths are wildly uneven</strong> — in one matrix, one row merges three rows and another merges thirty thousand. And <strong>which memory you touch depends on the values</strong>, so nothing prefetches. All three are the same thing, and the word for it is <strong>irregularity</strong>.<span class="pause">  //</span></p>
+<p>And the challenge scores generality across the whole suite: brilliant on ten matrices and terrible on ninety scores badly.</p>
+<hr />
+<h2><span class="n">3</span>The hard part</h2>
+<p>Here is what the suite looks like. A banded matrix from a P-D-E solver. A power-law graph, where a few rows hold most of the entries. A stiffness matrix, with dense little blocks down the diagonal. A circuit matrix with no symmetry at all.<span class="pause">  //</span></p>
+<p>Tune a kernel for any one of these and you lose on the others. We measured that — on our kernel, and on the vendor's.<span class="pause">  //</span></p>
+<p>Look at these three, all stiffness matrices. cuSPARSE picks a <strong>pathological</strong> code path here — one that goes badly wrong — and our very simple hash kernel beats it by ninety-six, a hundred and four, and <strong>a hundred and ninety times</strong>.<span class="pause">  //</span></p>
+<p>So we stopped asking which kernel is fastest. The useful question turned out to be: <strong>given this matrix, which kernel should run?</strong></p>
+<hr />
+<h2><span class="n">4</span>Our engine</h2>
+<p>Our kernel hands each output row to one warp, which merges the incoming rows into a small hash table — all of its lanes writing at the same time. Every insert is an atomic compare-and-swap, so the result never depends on which lane gets there first.<span class="pause">  //</span></p>
+<p>The interesting decision is <strong>how big to make that table</strong>. Here is the trick: before computing a row, we can already put a <strong>ceiling</strong> on it. Walk that row of A, add up the lengths of the rows you are about to merge, and the answer cannot have more entries than that sum. It is a loose ceiling — but it is free, and it is a ceiling, which is what we need.<span class="pause">  //</span></p>
+<p>We allocate a third more than that, so the table stays at most three-quarters full and probes stay short, and we round up to a power of two so wrapping around is a bit-mask instead of a division.<span class="pause">  //</span></p>
+<p><strong>That same number decides where the table lives.</strong> Small enough for shared memory — about a thousand entries — and the row is accumulated entirely on-chip. Bigger, and it gets its own private slice of a scratch buffer in global memory. Short rows get the fast path, long rows get a safe one, and no row can run over into its neighbour's.<span class="pause">  //</span></p>
+<p>We walk each row <strong>twice</strong>. The first pass, the symbolic pass, only counts distinct columns, so we know exactly how big the output is before allocating a byte of it. The second does the arithmetic.<span class="pause">  //</span></p>
+<p>Then one sort. We pack each entry's row and column into a single sixty-four-bit number, so sorting on that one key sorts by row first and column second — which is exactly CSR. One radix sort from CUB, scratch space allocated once and reused.<span class="pause">  //</span></p>
+<p>For the Gram product we build the transpose explicitly and feed it to the same kernel, and that transpose is inside our timing.<span class="pause">  //</span></p>
+<p>None of this uses anything Hopper-specific, and it matches cuSPARSE entry for entry on all two hundred and fifty-eight tasks.</p>
+<hr />
+<h2><span class="n">5</span>The dispatcher</h2>
+<p>So neither implementation wins everywhere. Rather than pick one and live with it, we look at the matrix and choose.<span class="pause">  //</span></p>
+<p>When a matrix loads we compute six numbers from its structure: how big it is, how many nonzeros, the average row length, <strong>how uneven the row lengths are</strong>, roughly how dense the output will be, and how symmetric the pattern is. All six come from one pass over the indices. We never run either kernel to find out.<span class="pause">  //</span></p>
+<p>The rule is three comparisons deep — it is written out on the slide — and its shape is simple. Rows fairly even: use ours. Rows wildly uneven: use ours only when the matrix is big enough to be worth it and the output will not be too dense. Otherwise, cuSPARSE.<span class="pause">  //</span></p>
+<p>Which of the six carries that decision? The one that measures <strong>how uneven the rows are</strong> — eighty percent of it, on its own. I like that, because row-length imbalance is what made this problem hard in the first place. <strong>The feature that breaks the kernel is the feature that tells you which kernel to use.</strong><span class="pause">  //</span></p>
+<p>One pass over the structure, three comparisons, and we profile nothing.</p>
+<hr />
+<h2><span class="n">6</span>Results</h2>
+<p>Whole benchmark, two hundred and fifty-eight tasks, everything relative to cuSPARSE.<span class="pause">  //</span></p>
+<p>cuSPARSE takes fifteen hundred and twenty milliseconds. Our kernel on everything takes one thousand and eighty-three — one point four times, but dragged down by the matrices it is bad at. The dispatcher takes <strong>five hundred and seventy-nine</strong>: <strong>two point six three times</strong>.<span class="pause">  //</span></p>
+<p>The bottom bar is the <strong>oracle</strong>: four hundred and forty-six. So there were about a thousand and seventy milliseconds on the table, and we take nine hundred and forty of them. <strong>Eighty-eight percent.</strong> And all two hundred and fifty-eight results are still correct, entry for entry.<span class="pause">  //</span></p>
+<p>Two caveats. Those six numbers cost under one percent on the small matrices, eight point six percent over the whole suite — almost all of it one host-side pass over our biggest matrices, which belongs on the GPU. And these are <strong>H100</strong> numbers — cuSPARSE uses its Hopper paths there and we use none, so on an A100 we would expect the gap to widen.</p>
+<hr />
+<h2><span class="n">7</span>Robustness</h2>
+<p>In practice the dispatcher sent <strong>two hundred and eleven</strong> tasks to our kernel and <strong>forty-seven</strong> to cuSPARSE.<span class="pause">  //</span></p>
+<p>On the small matrices, our kernel on its own is already <strong>two point seven times</strong> faster in aggregate, winning on about eight matrices in ten.<span class="pause">  //</span></p>
+<p>Where it loses is the very large cases with dense output. One hash strategy is the wrong tool there; you want a merge-based accumulator, and we do not have one yet. Those are exactly the forty-seven the dispatcher hands off.<span class="pause">  //</span></p>
+<p>That is what makes the system <strong>robust by construction</strong>, and it is the property I would like to leave you with: <strong>we don't need our kernel to be the best kernel. We need to know when it isn't.</strong></p>
+<hr />
+<h2><span class="n">8</span>Conclusion</h2>
+<p>The hard part of real-world SpGEMM is <strong>generality</strong>.<span class="pause">  //</span></p>
+<p>We built a hash kernel that sizes itself per row and is correct everywhere, and a rule that reads six structural numbers and picks the right implementation without ever running a timing experiment. <strong>Two point six three times</strong> over the vendor library, driven by row-length imbalance.<span class="pause">  //</span></p>
+<p><strong>Route each matrix to whatever solves it fastest.</strong><span class="pause">  //</span></p>
+<p>Thank you — happy to take questions.</p>
+<hr />
+<h2 class="plain">Handling Q&amp;A — a few likely questions</h2>
+<ul>
+<li><strong>"Why a third larger, and why a power of two?"</strong> → We allocate <code>4/3</code> of the ceiling, so the table is at most seventy-five percent full and linear probing stays short without wasting shared memory. Rounding up to a power of two is what lets both the initial hash and the probe step be a bit-mask, <code>&amp; (cap − 1)</code>, instead of a modulo.</li>
+<li><strong>"How do you handle collisions and races between lanes?"</strong> → Linear probing on a multiplicative hash, with <strong>every probe an <code>atomicCAS</code></strong>. The CAS hands back whatever was in the slot: <code>−1</code> means this lane just claimed it, our own key means someone else already inserted it, anything else means keep probing. No lock, and no assumption about lane ordering. We deliberately do <em>not</em> read the slot before the CAS — in shared memory that read can be cached and miss another lane's write, which duplicates keys across slots.</li>
+<li><strong>"The Gram product is symmetric — did you exploit that?"</strong> → We did build that variant: hash only the upper triangle, then mirror. It halves the merging work, but you pay for a mirror pass and still sort the full result. Net it is a <em>loss</em> on small matrices — zero point nine two times — and a gain at scale: one point one two on medium, one point two six on large. It is byte-exact against the plain Gram product on all one hundred and twenty-nine matrices we ran. So the symmetry optimisation is itself size-dependent, which makes it a natural third option for the same dispatcher.</li>
+<li><strong>"Isn't the ceiling very loose on dense rows?"</strong> → It can be, and that is the honest cost of the approach: we sometimes allocate a much larger table than the row needs. The saving is that we never have to grow, retry, or spill mid-row. On the very large high-fill matrices that looseness is part of why we lose — and part of why those go to cuSPARSE.</li>
+<li><strong>"Why not a merge-based accumulator?"</strong> → Hashing is the right default for the small-to-medium regime that dominates the suite, and it keeps us at one kernel rather than a bin-sorted family. Merge-based accumulation is precisely what we are missing on the very large rows; adding it as a third branch under the same dispatcher is the next step.</li>
+<li><strong>"Why not use Tensor Cores?"</strong> → The output structure is unknown and the accesses are scattered, so there is no dense tile to feed a Tensor Core. Like cuSPARSE and prior work such as nsparse and spECK, our accumulation runs on the CUDA cores. Tensor-core SpGEMM helps when the matrix has dense block structure, which the general SuiteSparse suite does not have.</li>
+<li><strong>"Is the dispatcher trained or learned?"</strong> → No. It is a fixed depth-three tree distilled from the structural descriptors, which keeps it zero-profiling and fully portable. A learned cost model over the same six numbers is the natural next step.</li>
+<li><strong>"What does the dispatcher actually cost?"</strong> → Under one percent on the small-matrix regime — zero point zero one to zero point one four milliseconds. Across the whole suite it is eight point six percent, and essentially all of that is one host-side <code>O(nnz)</code> pass over the largest matrices. Computing the descriptors on the GPU, or fusing them into the CSR load, removes it.</li>
+<li><strong>"These are H100 numbers — will they hold on A100?"</strong> → The binary is S-M eighty only, so it runs identically on A100. cuSPARSE currently gets its faster Hopper paths on the H100 while we use none, so our relative speedups are, if anything, conservative. Reproducing them natively on A100 is first on our list.</li>
+<li><strong>"Did you test the official matrix set?"</strong> → Our Group 1 is a <em>proxy</em>: the first hundred square real matrices in SuiteSparse's default order, which matches the official size regime. We added a second group of forty-one structurally diverse matrices — up to one point one million rows — specifically to stress generality.</li>
+<li><strong>"Did you exclude any matrices?"</strong> → Only by an output-size guard, never by result. For A times A-transpose on power-law graphs the Gram output can become near-dense and exceed memory, so twelve of the forty-one diversity matrices are excluded by an upper bound on output size. That bound is structural, and applied before we know any timing.</li>
+<li><strong>"How do you guarantee correctness?"</strong> → Byte-exact structural nonzero count, plus order-independent value checksums, against both cuSPARSE and a SciPy reference, on all two hundred and fifty-eight tasks — zero mismatches. We also cross-check the symmetric variant against the plain Gram product.</li>
+</ul>
+<hr />
+<h2 class="plain">Pronunciation Guide (生词读音表)</h2>
+<p><em>Format: word — IPA — simple respelling (stress in CAPS). Practice the ones marked ⚑ out loud a few times.</em></p>
+<h3>Core technical terms</h3>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>IPA</th>
+<th>Say it like</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⚑ SpGEMM</td>
+<td>/ ɛs piː dʒɛm /</td>
+<td>"S-P-<strong>gem</strong>" (spell S-P, then "gem")</td>
+</tr>
+<tr>
+<td>⚑ sparse</td>
+<td>/ spɑːrs /</td>
+<td>"sparss"</td>
+</tr>
+<tr>
+<td>⚑ SuiteSparse</td>
+<td>/ swiːt spɑːrs /</td>
+<td>"<strong>SWEET</strong>-sparss" (<em>suite</em> = "sweet", never "suit")</td>
+</tr>
+<tr>
+<td>matrix / matrices</td>
+<td>/ ˈmeɪtrɪks / · / ˈmeɪtrɪsiːz /</td>
+<td>"<strong>MAY</strong>-triks" / "<strong>MAY</strong>-tri-seez"</td>
+</tr>
+<tr>
+<td>⚑ Gram (product)</td>
+<td>/ ɡræm /</td>
+<td>"gramm"</td>
+</tr>
+<tr>
+<td>transpose (noun)</td>
+<td>/ ˈtrænspoʊz /</td>
+<td>"<strong>TRANS</strong>-pohz" (as in "A-transpose")</td>
+</tr>
+<tr>
+<td>symmetric / symmetry</td>
+<td>/ sɪˈmɛtrɪk / · / ˈsɪmɪtri /</td>
+<td>"si-<strong>MET</strong>-rik" / "<strong>SIM</strong>-i-tree"</td>
+</tr>
+<tr>
+<td>⚑ irregularity</td>
+<td>/ ɪˌrɛɡjəˈlærɪti /</td>
+<td>"ih-reg-yuh-<strong>LAIR</strong>-i-tee"</td>
+</tr>
+<tr>
+<td>⚑ dispatcher</td>
+<td>/ dɪˈspætʃər /</td>
+<td>"dis-<strong>PATCH</strong>-er"</td>
+</tr>
+<tr>
+<td>⚑ hindsight</td>
+<td>/ ˈhaɪndsaɪt /</td>
+<td>"<strong>HYND</strong>-site"</td>
+</tr>
+<tr>
+<td>⚑ millisecond</td>
+<td>/ ˈmɪlisɛkənd /</td>
+<td>"<strong>MIL</strong>-i-sek-und"</td>
+</tr>
+</tbody>
+</table>
+<h3>Algorithm terms — rehearse these</h3>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>IPA</th>
+<th>Say it like</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⚑ ceiling</td>
+<td>/ ˈsiːlɪŋ /</td>
+<td>"<strong>SEE</strong>-ling"</td>
+</tr>
+<tr>
+<td>⚑ probe / probing</td>
+<td>/ proʊb /</td>
+<td>"prohb" / "<strong>PROH</strong>-bing"</td>
+</tr>
+<tr>
+<td>⚑ bit-mask</td>
+<td>/ ˈbɪt mæsk /</td>
+<td>"<strong>BIT</strong>-mask"</td>
+</tr>
+<tr>
+<td>⚑ symbolic</td>
+<td>/ sɪmˈbɑːlɪk /</td>
+<td>"sim-<strong>BOL</strong>-ik"</td>
+</tr>
+<tr>
+<td>⚑ radix (sort)</td>
+<td>/ ˈreɪdɪks /</td>
+<td>"<strong>RAY</strong>-diks"</td>
+</tr>
+<tr>
+<td>⚑ scratch (buffer)</td>
+<td>/ skrætʃ /</td>
+<td>"skratch"</td>
+</tr>
+<tr>
+<td>⚑ prefetch</td>
+<td>/ ˌpriːˈfɛtʃ /</td>
+<td>"pree-<strong>FETCH</strong>"</td>
+</tr>
+<tr>
+<td>⚑ atomic (compare-and-swap)</td>
+<td>/ əˈtɑːmɪk /</td>
+<td>"uh-<strong>TOM</strong>-ik"</td>
+</tr>
+<tr>
+<td>⚑ accumulator</td>
+<td>/ əˈkjuːmjəleɪtər /</td>
+<td>"uh-<strong>KYOO</strong>-myuh-lay-ter"</td>
+</tr>
+</tbody>
+</table>
+<h3>Kernel / hardware terms</h3>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>IPA</th>
+<th>Say it like</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⚑ cuSPARSE</td>
+<td>/ kjuː spɑːrs /</td>
+<td>"cue-<strong>sparss</strong>"</td>
+</tr>
+<tr>
+<td>⚑ CUB</td>
+<td>/ kʌb /</td>
+<td>"cub" (like the animal)</td>
+</tr>
+<tr>
+<td>warp / lane</td>
+<td>/ wɔːrp / · / leɪn /</td>
+<td>"worp" / "layn"</td>
+</tr>
+<tr>
+<td>⚑ hash / hashing</td>
+<td>/ hæʃ /</td>
+<td>"hash"</td>
+</tr>
+<tr>
+<td>⚑ nonzeros</td>
+<td>/ nɑnˈzɪroʊz /</td>
+<td>"non-<strong>ZEER</strong>-ohz"</td>
+</tr>
+<tr>
+<td>stiffness (matrix)</td>
+<td>/ ˈstɪfnəs /</td>
+<td>"<strong>STIFF</strong>-ness"</td>
+</tr>
+<tr>
+<td>vendor</td>
+<td>/ ˈvɛndər /</td>
+<td>"<strong>VEN</strong>-der"</td>
+</tr>
+<tr>
+<td>⚑ Hopper</td>
+<td>/ ˈhɑːpər /</td>
+<td>"<strong>HOP</strong>-er"</td>
+</tr>
+</tbody>
+</table>
+<h3>Q&amp;A only — not in the talk, but rehearse for questions</h3>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>IPA</th>
+<th>Say it like</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⚑ nsparse</td>
+<td>/ ɛn spɑːrs /</td>
+<td>"N-sparss"</td>
+</tr>
+<tr>
+<td>⚑ spECK</td>
+<td>/ spɛk /</td>
+<td>"speck"</td>
+</tr>
+<tr>
+<td>⚑ descriptor</td>
+<td>/ dɪˈskrɪptər /</td>
+<td>"dis-<strong>KRIP</strong>-ter"</td>
+</tr>
+<tr>
+<td>⚑ multiplicative</td>
+<td>/ ˌmʌltɪˈplɪkətɪv /</td>
+<td>"mul-ti-<strong>PLIK</strong>-uh-tiv"</td>
+</tr>
+<tr>
+<td>⚑ modulo</td>
+<td>/ ˈmɑːdʒəloʊ /</td>
+<td>"<strong>MOJ</strong>-uh-loh"</td>
+</tr>
+</tbody>
+</table>
+<h3>Easy to mis-stress (watch these)</h3>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>Correct stress</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>gen</strong>erality → generality</td>
+<td>jen-er-<strong>AL</strong>-i-tee</td>
+</tr>
+<tr>
+<td><strong>rob</strong>ust → robust</td>
+<td>roh-<strong>BUST</strong> (stress 2nd)</td>
+</tr>
+<tr>
+<td>an<strong>al</strong>ytics → analytics</td>
+<td>an-uh-<strong>LIT</strong>-iks</td>
+</tr>
+<tr>
+<td>in <strong>agg</strong>regate → in aggregate</td>
+<td>"in <strong>AG</strong>-ri-gut"</td>
+</tr>
+<tr>
+<td><strong>irr</strong>egularity → irregularity</td>
+<td>ih-reg-yuh-<strong>LAIR</strong>-i-tee</td>
+</tr>
+</tbody>
+</table>
+<h3>Numbers you will say (rehearse these exact phrasings)</h3>
+<ul>
+<li><strong>190× / 104× / 96×</strong> → "a hundred and ninety times" / "a hundred and four times" / "ninety-six times"</li>
+<li><strong>258</strong> → "two hundred and fifty-eight"</li>
+<li><strong>~1000 entries</strong> → "about a thousand entries"</li>
+<li><strong>64-bit</strong> → "a single sixty-four-bit number"</li>
+<li><strong>1520 ms</strong> → "fifteen hundred and twenty milliseconds"</li>
+<li><strong>1083 ms</strong> → "one thousand and eighty-three"</li>
+<li><strong>579 ms / 446 ms</strong> → "five hundred and seventy-nine" / "four hundred and forty-six"</li>
+<li><strong>1070 / 940 ms</strong> → "one thousand and seventy" / "nine hundred and forty"</li>
+<li><strong>2.63× / 1.40× / 2.7×</strong> → "two point six three times" / "one point four times" / "two point seven times"</li>
+<li><strong>88% / 80% / 8.6%</strong> → "eighty-eight percent" / "eighty percent" / "eight point six percent"</li>
+<li><strong>211 / 47</strong> → "two hundred and eleven" / "forty-seven"</li>
+<li><strong>sm_80</strong> → "S-M eighty"</li>
+<li><strong>A100 / H100</strong> → "A one hundred" / "H one hundred"</li>
+</ul></body></html>
